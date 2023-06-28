@@ -4,7 +4,7 @@ bl_info = {
     "author": "Rubiel",
     "version": (1, 0),
     "blender": (3, 4, 0),
-    "location": "View3D > Tool > Generate 2D Sprites",
+    "location": "Render > Generate 2D Sprites",
     "category": "Object",
 }
 
@@ -93,11 +93,11 @@ def menu_func(self, context):
 
 def register():
     bpy.utils.register_class(CharacterSpriteRenderer)
-    bpy.types.VIEW3D_MT_object.append(menu_func)
+    bpy.types.TOPBAR_MT_render.append(menu_func)
 
 def unregister():
     bpy.utils.unregister_class(CharacterSpriteRenderer)
-    bpy.types.VIEW3D_MT_object.remove(menu_func)
+    bpy.types.TOPBAR_MT_render.remove(menu_func)
 
 if __name__ == "__main__":
     register()
