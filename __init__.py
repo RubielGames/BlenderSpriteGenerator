@@ -33,6 +33,8 @@ class CharacterSpriteRenderer(bpy.types.Operator):
         scene.render.resolution_x = int(context.scene.sprite_renderer.resolution)
         scene.render.resolution_y = int(context.scene.sprite_renderer.resolution)
         scene.render.film_transparent = True
+        include_animation = context.scene.sprite_renderer.include_animation
+        frame_step = context.scene.sprite_renderer.frame_step
 
         perspective = context.scene.sprite_renderer.perspective
         camera_type = context.scene.sprite_renderer.camera_type
@@ -62,6 +64,9 @@ class CharacterSpriteRenderer(bpy.types.Operator):
             distance = 0.5 * character_height / tan(0.5 * atan(0.5 * camera.data.sensor_height / camera.data.lens))
             z_distance = distance
 
+        # Get the frame range of the animation
+        frame_start = scene.frame_start
+        frame_end = scene.frame_end
 
         # Loop to set the camera's position and render the scene
         for i in range(number_of_angles):
@@ -77,11 +82,20 @@ class CharacterSpriteRenderer(bpy.types.Operator):
             camera.rotation_mode = 'QUATERNION'
             camera.rotation_quaternion = direction.to_track_quat('-Z', 'Y')  # camera looks towards the character
 
-            # Set output path
-            scene.render.filepath = os.path.join(output_folder, '{}_{}.png'.format(basename, i))
-
-            # Render the scene
-            bpy.ops.render.render(write_still = True)
+            # Check if there is animation
+            if include_animation and frame_start != frame_end:
+                # Loop through every frame of the animation
+                for frame in range(frame_start, frame_end + 1, frame_step):
+                    scene.frame_set(frame)
+                    # Set output path
+                    scene.render.filepath = os.path.join(output_folder, '{}_angle{}_frame{}.png'.format(basename, i, frame))
+                    # Render the scene
+                    bpy.ops.render.render(write_still = True)
+            else:
+                # Handle static scene (no animation)
+                scene.render.filepath = os.path.join(output_folder, '{}_angle{}.png'.format(basename, i))
+                # Render the scene
+                bpy.ops.render.render(write_still = True)
 
         bpy.data.objects.remove(camera, do_unlink=True)
 
@@ -111,6 +125,8 @@ class SpriteRendererPanel(bpy.types.Panel):
         layout.prop(renderer, "perspective")
         layout.prop(renderer, "camera_type")
         layout.prop(renderer, "resolution")
+        layout.prop(renderer, "include_animation")
+        layout.prop(renderer, "frame_step")
 
         # draw the operator
         layout.operator("object.sprite_renderer")
@@ -152,6 +168,17 @@ class SpriteRendererProperties(bpy.types.PropertyGroup):
             ('512', "512x512", "")
         ],
         default='512',
+    )
+    include_animation: bpy.props.BoolProperty(
+        name="Include Animation",
+        default=False,
+        description="Whether to render all frames of the animation for each angle.",
+    )
+    frame_step: bpy.props.IntProperty(
+        name="Frame Step",
+        default=1,
+        min=1,
+        description="Render every n-th frame of the animation. For example, if set to 3, only every third frame will be rendered.",
     )
 
 
