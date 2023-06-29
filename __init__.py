@@ -62,7 +62,8 @@ class CharacterSpriteRenderer(bpy.types.Operator):
             z_distance = 0
         else:
             distance = 0.5 * character_height / tan(0.5 * atan(0.5 * camera.data.sensor_height / camera.data.lens))
-            z_distance = distance
+            camera_angle_rad = context.scene.sprite_renderer.camera_angle * 3.14159 / 180  # converting to radians
+            z_distance = distance * tan(camera_angle_rad)
 
         # Get the frame range of the animation
         frame_start = scene.frame_start
@@ -123,6 +124,7 @@ class SpriteRendererPanel(bpy.types.Panel):
         layout.prop(renderer, "output_folder")
         layout.prop(renderer, "basename")
         layout.prop(renderer, "perspective")
+        layout.prop(renderer, "camera_angle") 
         layout.prop(renderer, "camera_type")
         layout.prop(renderer, "resolution")
         layout.prop(renderer, "include_animation")
@@ -146,8 +148,9 @@ class SpriteRendererProperties(bpy.types.PropertyGroup):
             ('2D', "2D", ""),
             ('2.5D', "2.5D", "")
         ],
-        default='2D',
+        default='2.5D',
     )
+    camera_angle: bpy.props.FloatProperty(name="Camera Angle", default=30.0, min=0.0, max=89.0)
     camera_type: bpy.props.EnumProperty(
         name="Camera Type",
         description="Select Camera type",
