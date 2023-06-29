@@ -124,11 +124,17 @@ class SpriteRendererPanel(bpy.types.Panel):
         layout.prop(renderer, "output_folder")
         layout.prop(renderer, "basename")
         layout.prop(renderer, "perspective")
-        layout.prop(renderer, "camera_angle") 
+        # Only enable camera_angle if perspective is '2.5D'
+        row = layout.row()
+        row.enabled = (renderer.perspective == '2.5D')
+        row.prop(renderer, "camera_angle")
         layout.prop(renderer, "camera_type")
         layout.prop(renderer, "resolution")
         layout.prop(renderer, "include_animation")
-        layout.prop(renderer, "frame_step")
+        # Only enable frame_step if include_animation is True
+        row = layout.row()
+        row.enabled = renderer.include_animation
+        row.prop(renderer, "frame_step")
 
         # draw the operator
         layout.operator("object.sprite_renderer")
