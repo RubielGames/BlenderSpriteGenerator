@@ -4,7 +4,7 @@ bl_info = {
     "author": "Rubiel",
     "version": (1, 0),
     "blender": (3, 4, 0),
-    "location": "Render > Generate 2D Sprites",
+    "location": "View3D > Sidebar > Sprite Renderer Panel",
     "category": "Object",
 }
 
@@ -17,25 +17,25 @@ from mathutils import Vector
 class CharacterSpriteRenderer(bpy.types.Operator):
     """2D/2.5D Sprite Renderer"""      # Use this as a tooltip for menu items and buttons.
     bl_idname = "object.sprite_renderer"  # Unique identifier for buttons and menu items to reference.
-    bl_label = "2D/2.5D Sprite Renderer"   # Display name in the interface.
+    bl_label = "Render Sprites"   # Display name in the interface.
 
     def execute(self, context): 
 
-        # Assuming your character is at the center of the world, i.e., (0,0,0).
-        # If not, change these values to the position of your character
+        # Getting properties from the scene
         character_position = Vector((0, 0, 0)) 
-        character_height = 2
-        number_of_angles = 8
+        character_height = context.scene.sprite_renderer.character_height
+        number_of_angles = context.scene.sprite_renderer.number_of_angles
 
-        output_folder = r'd:\tmp'
+        output_folder = bpy.path.abspath(context.scene.sprite_renderer.output_folder)
         os.makedirs(output_folder, exist_ok=True)
+        basename = context.scene.sprite_renderer.basename
         scene = bpy.context.scene
-        scene.render.resolution_x = 512
-        scene.render.resolution_y = 512
+        scene.render.resolution_x = int(context.scene.sprite_renderer.resolution)
+        scene.render.resolution_y = int(context.scene.sprite_renderer.resolution)
         scene.render.film_transparent = True
 
-        perspective = '2D'  # Choose the perspective: '2D' or '2.5D'
-        camera_type = 'ORTHO'
+        perspective = context.scene.sprite_renderer.perspective
+        camera_type = context.scene.sprite_renderer.camera_type
 
         # Check if the camera already exists in the scene
         camera_name = '2DSpriteCamera'
@@ -78,7 +78,7 @@ class CharacterSpriteRenderer(bpy.types.Operator):
             camera.rotation_quaternion = direction.to_track_quat('-Z', 'Y')  # camera looks towards the character
 
             # Set output path
-            scene.render.filepath = os.path.join(output_folder, 'render_{}.png'.format(i))
+            scene.render.filepath = os.path.join(output_folder, '{}_{}.png'.format(basename, i))
 
             # Render the scene
             bpy.ops.render.render(write_still = True)
@@ -88,16 +88,86 @@ class CharacterSpriteRenderer(bpy.types.Operator):
         return {'FINISHED'}            # Lets Blender know the operator finished successfully.
 
 
-def menu_func(self, context):
-    self.layout.operator(CharacterSpriteRenderer.bl_idname)
+# This is the Panel where you set the properties
+class SpriteRendererPanel(bpy.types.Panel):
+    """Creates a Panel in the Object properties window"""
+    bl_label = "Sprite Renderer"
+    bl_idname = "OBJECT_PT_sprite_renderer"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Sprite Renderer"
 
+    def draw(self, context):
+        layout = self.layout
+
+        scene = context.scene
+        renderer = scene.sprite_renderer
+
+        # draw the properties
+        layout.prop(renderer, "character_height")
+        layout.prop(renderer, "number_of_angles")
+        layout.prop(renderer, "output_folder")
+        layout.prop(renderer, "basename")
+        layout.prop(renderer, "perspective")
+        layout.prop(renderer, "camera_type")
+        layout.prop(renderer, "resolution")
+
+        # draw the operator
+        layout.operator("object.sprite_renderer")
+
+
+# This is the property group where you store your variables
+class SpriteRendererProperties(bpy.types.PropertyGroup):
+
+    character_height: bpy.props.FloatProperty(name="Character Height", default=2.0)
+    number_of_angles: bpy.props.IntProperty(name="Number of Angles", default=8)
+    output_folder: bpy.props.StringProperty(name="Output Folder", default="//", subtype='DIR_PATH')
+    basename: bpy.props.StringProperty(name="Basename", default="render")
+    perspective: bpy.props.EnumProperty(
+        name="Perspective",
+        description="Select Perspective type",
+        items=[
+            ('2D', "2D", ""),
+            ('2.5D', "2.5D", "")
+        ],
+        default='2D',
+    )
+    camera_type: bpy.props.EnumProperty(
+        name="Camera Type",
+        description="Select Camera type",
+        items=[
+            ('ORTHO', "Orthographic", ""),
+            ('PERSP', "Perspective", "")
+        ],
+        default='ORTHO',
+    )
+    resolution: bpy.props.EnumProperty(
+        name="Resolution",
+        description="Select the resolution",
+        items=[
+            ('32', "32x32", ""),
+            ('64', "64x64", ""),
+            ('128', "128x128", ""),
+            ('256', "256x256", ""),
+            ('512', "512x512", "")
+        ],
+        default='512',
+    )
+
+
+# Registration
 def register():
     bpy.utils.register_class(CharacterSpriteRenderer)
-    bpy.types.TOPBAR_MT_render.append(menu_func)
+    bpy.utils.register_class(SpriteRendererPanel)
+    bpy.utils.register_class(SpriteRendererProperties)
+    bpy.types.Scene.sprite_renderer = bpy.props.PointerProperty(type=SpriteRendererProperties)
+
 
 def unregister():
     bpy.utils.unregister_class(CharacterSpriteRenderer)
-    bpy.types.TOPBAR_MT_render.remove(menu_func)
+    bpy.utils.unregister_class(SpriteRendererPanel)
+    bpy.utils.unregister_class(SpriteRendererProperties)
+    del bpy.types.Scene.sprite_renderer
 
 if __name__ == "__main__":
     register()
