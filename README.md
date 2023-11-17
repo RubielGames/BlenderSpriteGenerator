@@ -30,7 +30,7 @@ This is the default setting. Ensure the character is at the origin (`0, 0, 0`). 
 
 ## Usage - Your Own Camera
 This will disable Camera Settings box. Animation is still usable, ideal for rendering effects or non-static movements. For a camera style like the default:
-    * Select your camera.
-    * Go to the `Data` tab, expand `Lens`, and set `Type` to Orthographic.
-    * In the `Output` tab, adjust `Resolution` in the Format box.
-    * Press `F12` to test rendering.
+* Select your camera.
+* Go to the `Data` tab, expand `Lens`, and set `Type` to Orthographic.
+* In the `Output` tab, adjust `Resolution` in the Format box.
+* Press `F12` to test rendering.
