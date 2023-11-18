@@ -34,3 +34,9 @@ This will disable Camera Settings box. Animation is still usable, ideal for rend
 * Go to the `Data` tab, expand `Lens`, and set `Type` to Orthographic.
 * In the `Output` tab, adjust `Resolution` in the Format box.
 * Press `F12` to test rendering.
+
+## Tested on Versions
+* Blender 4.0
+* Blender 3.6
+* GooEngine 3.6
+* Blender 3.4
